@@ -1,1 +1,1 @@
-web: gunicorn <your-project-name>.wsgi --log-file -
+web: gunicorn Pourmee_BackEnd.wsgi --log-file -
