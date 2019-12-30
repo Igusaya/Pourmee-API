@@ -125,7 +125,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 try:
-    from.local_settings import *
+    from .local_settings import *
 except ImportError:
     pass
 
