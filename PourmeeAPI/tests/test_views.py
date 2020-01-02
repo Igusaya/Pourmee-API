@@ -3,9 +3,12 @@ from rest_framework.exceptions import ErrorDetail
 
 from django.test import TestCase
 from django.urls import reverse
+from django.http import Http404
 from rest_framework import status
 
 from PourmeeAPI.models import Card
+from PourmeeAPI.views import CardDetail
+from PourmeeAPI.tests.utils import Cleater
 
 
 class CardTests(TestCase):
@@ -16,7 +19,7 @@ class CardTests(TestCase):
         Throw a get request.
         """
         url = '/cards/'
-        response = self.client.get(url)
+        response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -73,3 +76,64 @@ class CardTests(TestCase):
         self.assertIn('name', response.data)
         self.assertEqual(response.data['name'][0].code, 'max_length')
 
+
+    def test_get_object(self):
+        """
+        Nomal test of CardDetail.get_object methode.
+        """
+        creater = Cleater()
+        id = creater.create_card()
+        card_detail = CardDetail()
+        object = CardDetail().get_object(pk=id)
+
+        self.assertEqual(object.name, 'test_name')
+
+
+    def test_get_object_abnomal(self):
+        """
+        Abnomal test of CardDetail.get_object methode.
+        """
+        with self.assertRaises(Http404):
+            CardDetail().get_object(pk=0)
+
+
+    def test_get_card_detail(self):
+        """
+        Nomal test of CardDetail.put methode.
+        """
+        id = Cleater().create_card()
+        url = '/cards/' + str(id) + '/'
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], 'test_name')
+        self.assertEqual(response.data['id'], 1)
+
+
+    def test_put_card_detail(self):
+        """
+        Nomal test of CardDetail.put methode.
+        """
+        id = Cleater().create_card()
+        url = '/cards/' + str(id) + '/'
+        data = json.dumps({
+                'name': 'update_name',
+                'position': 999,
+                'color': '#333333',
+        })
+        response = self.client.put(url, data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Card.objects.count(), 1)
+        self.assertEqual(Card.objects.get().name, 'update_name')
+        self.assertEqual(Card.objects.get().position, 999)
+        self.assertEqual(Card.objects.get().color, '#333333')
+
+
+    def test_delete_card_detail(self):
+        """
+        Nomal test of CardDetail.delete methode.
+        """
+        id = Cleater().create_card()
+        url = '/cards/' + str(id) + '/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Card.objects.count(), 0)
